@@ -11,6 +11,9 @@ public class AndroidLauncher extends AndroidApplication {
 	protected void onCreate (Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
+		// no compass or accelerometer ?? Why ??
+		config.useAccelerometer = false;
+		config.useCompass = false;
 		initialize(new GDXInertia(), config);
 	}
 }
