@@ -7,6 +7,7 @@ import com.game.snowgoon.GDXInertia;
 /**
  * Tutorial from
  * https://github.com/libgdx/libgdx/wiki/A-simple-game
+ * https://github.com/libgdx/libgdx/wiki/Extending%20the%20Simple%20Game
  * 
  * @author snowgoon88@gmail.com
  *
