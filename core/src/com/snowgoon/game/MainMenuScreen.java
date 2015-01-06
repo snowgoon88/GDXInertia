@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.game.snowgoon;
+package com.snowgoon.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -54,7 +54,8 @@ public class MainMenuScreen implements Screen {
         _game._spriteBatch.end();
 
         if (Gdx.input.isTouched()) {
-            _game.setScreen( new GameScreen( _game));
+            //_game.setScreen( new GameScreen( _game));
+        	_game.setScreen(new JoystickScreen( _game ));
             dispose();
         }
 

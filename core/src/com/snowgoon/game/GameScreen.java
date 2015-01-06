@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.game.snowgoon;
+package com.snowgoon.game;
 
 import java.util.Iterator;
 

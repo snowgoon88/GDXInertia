@@ -1,16 +1,17 @@
-package com.game.snowgoon;
+package com.snowgoon.game;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 
 public class GDXInertia extends Game {
 //	/** Need orthographic Camera for visualization of 2D projection */
 //	OrthographicCamera _cam;
-//	/** Something that can render Shapes. Link with OpenGL */
-//	ShapeRenderer _renderer;
+	/** Something that can render Shapes. Link with OpenGL */
+	ShapeRenderer _renderer;
 	
 	private OrthographicCamera _camera;
 	SpriteBatch _spriteBatch;
@@ -22,7 +23,7 @@ public class GDXInertia extends Game {
 	@Override
 	public void create () {
 //		_cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-//		_renderer = new ShapeRenderer();
+		_renderer = new ShapeRenderer();
 		
 		// Set a camera view
 		_camera = new OrthographicCamera();
