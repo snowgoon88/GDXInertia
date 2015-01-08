@@ -34,8 +34,8 @@ public class GDXInertia extends Game {
 		
 		//Use LibGDX's default Arial font.
         _font = new BitmapFont();
-        this.setScreen(new MainMenuScreen(this));
-
+        //this.setScreen(new MainMenuScreen(this));
+        this.setScreen(new LockScreen( this ));
 	}
 
 	@Override

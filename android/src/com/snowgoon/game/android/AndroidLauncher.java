@@ -18,10 +18,10 @@ public class AndroidLauncher extends AndroidApplication {
 		// no compass or accelerometer ?? Why ??
 		config.useAccelerometer = false;
 		config.useCompass = false;
-		//initialize(new GDXInertia(), config);
+		initialize(new GDXInertia(), config);
 		// initialize(new InputDemo2(), config);
 		//initialize(new InputDemo3(), config);
 		//initialize(new InputDemo4(), config);
-		initialize(new CameraDemo(), config);
+		// initialize(new CameraDemo(), config);
 	}
 }

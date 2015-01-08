@@ -22,10 +22,10 @@ public class DesktopLauncher {
 		config.title = "Goutte";
 		config.width = 800;
 		config.height = 480;
-		//new LwjglApplication(new GDXInertia(), config);
+		new LwjglApplication(new GDXInertia(), config);
 //		new LwjglApplication( new InputDemo2(), config);
 //		new LwjglApplication( new InputDemo3(), config);
 		//new LwjglApplication( new InputDemo4(), config);
-		new LwjglApplication( new CameraDemo(), config);
+		// new LwjglApplication( new CameraDemo(), config);
 	}
 }
