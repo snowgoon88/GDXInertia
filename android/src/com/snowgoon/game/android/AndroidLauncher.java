@@ -5,10 +5,6 @@ import android.os.Bundle;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.snowgoon.game.GDXInertia;
-import com.snowgoon.ressources.CameraDemo;
-import com.snowgoon.ressources.InputDemo2;
-import com.snowgoon.ressources.InputDemo3;
-import com.snowgoon.ressources.InputDemo4;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override

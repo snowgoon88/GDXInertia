@@ -3,10 +3,7 @@ package com.snowgoon.game.desktop;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.snowgoon.game.GDXInertia;
-import com.snowgoon.ressources.CameraDemo;
-import com.snowgoon.ressources.InputDemo2;
-import com.snowgoon.ressources.InputDemo3;
-import com.snowgoon.ressources.InputDemo4;
+
 
 /**
  * Tutorial from
