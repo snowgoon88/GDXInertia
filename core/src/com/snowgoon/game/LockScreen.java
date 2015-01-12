@@ -37,6 +37,8 @@ public class LockScreen implements Screen {
 
 	/** Array of Disks */
 	ArrayList<LockDisk> _disks;
+	/** Array of Sensors */
+	ArrayList<Sensor> _sensors;
 	
 	// Position screen touched
 	Vector3 _touchPos = new Vector3();
@@ -75,6 +77,15 @@ public class LockScreen implements Screen {
 		disk.addLaser( - MathUtils.PI/2.0f);
 		//disk._verb = true;
 		_disks.add( disk );
+		
+		// Init Sensor Info
+		_sensors = new ArrayList<Sensor>();
+		Sensor sensor;
+		sensor = new Sensor( _sensors.size(), _center, MathUtils.degRad * 15f, 200f, "close");
+		_sensors.add(sensor);
+		
+		sensor = new Sensor( _sensors.size(), _center, MathUtils.degRad * 180f, 200f, "close");
+		_sensors.add(sensor);
 		
 		
 		// Set a camera view
@@ -141,11 +152,27 @@ public class LockScreen implements Screen {
 				disk.updateNotTouched();
 			}
 		}
-		
+
 		// Draw Circles
 		//System.out.println("\n*******************************");
 		for (LockDisk disk : _disks) {
 			disk.render();
+		}
+		
+		// Update and Draw Sensors
+		for (Sensor sensor : _sensors) {
+			sensor._fgActivated = false;
+			System.out.println( "Sensor ["+sensor._id+"]");
+			for (LockDisk disk : _disks) {
+				for (LockDisk.LaserSrc laser : disk._lasers) {
+					if (laser._distBeam > 180f ) {
+						System.out.println("  laser_"+disk._id+"/"+laser._id +" at angle " + (MathUtils.radDeg * (laser._angLaser + disk._rotAngle)));
+						sensor.updateWithBeam(laser._angLaser + disk._rotAngle);
+					}
+				}
+
+			}
+			sensor.render( _game );
 		}
 	}
 

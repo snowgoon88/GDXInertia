@@ -40,11 +40,14 @@ public class LockDisk {
 	boolean _fgTapped;
 	float _angTapped;
 	
+	static final float MAXDISTLASER = 1000.0f;
+	
 	/** Laser Position */
 	class LaserSrc {
 		int _id;
-		float _angLaser;	
+		float _angLaser; // relative to disc	
 		float _radLaser;
+		float _distBeam; // how far travels the Beam
 		
 		public LaserSrc( int id, float angle ) {
 			_angLaser = angle;
@@ -170,18 +173,19 @@ public class LockDisk {
 		_game._spriteBatch.end();
 		
 		for (LaserSrc laser : _lasers) {
-			float distAway = -1.0f;
+			laser._distBeam = -1.0f;
 			if( _nextDisk != null ) {
-				distAway = _nextDisk.isBlocking(
+				laser._distBeam = _nextDisk.isBlocking(
 						normalizeAngleRad( laser._angLaser + _rotAngle - _nextDisk._rotAngle));
 			}
-			if (distAway < 0.0f ) {
-				distAway = 1000.0f;
+			if (laser._distBeam < 0.0f ) {
+				laser._distBeam = MAXDISTLASER;
 			}
 			if (_verb) {
-				System.out.println( "Render Laser "+laser._id+ "with d="+distAway);
+				System.out.println( "Render Laser "+laser._id+ "with d="+ laser._distBeam 
+						+ " at angle=" + (MathUtils.radDeg * (_rotAngle+laser._angLaser)));
 			}
-			laser.render( distAway );
+			laser.render( laser._distBeam );
 		}
 		
 		for (Obstacle obst : _obstacles) {
@@ -215,7 +219,7 @@ public class LockDisk {
 
 		if (_fgTapped) { // Already tapped
 			float curAng = MathUtils.atan2( ptFromCenter.y, ptFromCenter.x);
-			_rotAngle = _oldRotAngle + curAng - _angTapped;
+			_rotAngle = normalizeAngleRad(_oldRotAngle + curAng - _angTapped);
 		}
 		else { // New Tapped
 			_angTapped = MathUtils.atan2( ptFromCenter.y, ptFromCenter.x);

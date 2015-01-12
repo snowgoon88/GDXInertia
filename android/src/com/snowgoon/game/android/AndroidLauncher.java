@@ -2,6 +2,12 @@ package com.snowgoon.game.android;
 
 import android.os.Bundle;
 
+/**
+ * Pour lancer sur ma tablette.
+ * /usr/local/share/android_sdk/platform-tools/adb kill-server
+ * /usr/local/share/android_sdk/platform-tools/adb start-server
+ * plug in tablet and authorise access
+ */
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.snowgoon.game.GDXInertia;
