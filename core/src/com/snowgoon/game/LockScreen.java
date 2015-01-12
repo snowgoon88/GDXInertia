@@ -84,7 +84,10 @@ public class LockScreen implements Screen {
 		sensor = new Sensor( _sensors.size(), _center, MathUtils.degRad * 15f, 200f, "close");
 		_sensors.add(sensor);
 		
-		sensor = new Sensor( _sensors.size(), _center, MathUtils.degRad * 180f, 200f, "close");
+		sensor = new Sensor( _sensors.size(), _center, MathUtils.degRad * 180f, 200f, "open");
+		_sensors.add(sensor);
+		
+		sensor = new Sensor( _sensors.size(), _center, MathUtils.degRad * (-100f), 200f, "alarm");
 		_sensors.add(sensor);
 		
 		

@@ -28,6 +28,7 @@ public class Sensor {
 	final float ANGLEBOUND = MathUtils.PI / 72f; // 2.5 degree
 	final float ANGCOS = MathUtils.cos(ANGLEBOUND);
 	final float ANGSIN = MathUtils.sin(ANGLEBOUND);
+	final float SYMBOLSIZE = 20f;
 	
 	/** Transformation Matrix for rendering */
 	Matrix4 _sensorTransform = new Matrix4();
@@ -49,8 +50,13 @@ public class Sensor {
 		game._renderer.setTransformMatrix(_sensorTransform);
 		
 		game._renderer.begin();
-		if (_fgActivated) {
-			game._renderer.setColor(1.0f, 0.0f, 0.0f, 1.0f); // green
+		if ( (_fgActivated && _type.compareTo("open")==0)
+				|| (!_fgActivated && _type.compareTo("alarm")==0)) {
+			game._renderer.setColor(0.0f, 1.0f, 0.0f, 1.0f); // green
+		}
+		else if ( (_fgActivated && _type.compareTo("close")==0)
+				|| (_fgActivated && _type.compareTo("alarm")==0)) {
+			game._renderer.setColor(1.0f, 0.0f, 0.0f, 1.0f); // red
 		}
 		else {
 			game._renderer.setColor(1.0f, 1.0f, 0.0f, 1.0f); // yellow
@@ -64,8 +70,18 @@ public class Sensor {
 				 ANGSIN * (_dist-5f), ANGCOS * (_dist-5f));
 		game._renderer.line(0, _dist, 0, _dist+5f);
 		// Type
-		game._renderer.line(0, _dist+5f, 0, _dist+15f);
-		game._renderer.line(-5f, _dist+10f, 5f, _dist+10f);
+		if ( _type.compareTo("close") == 0 ) {
+			game._renderer.line(0, _dist+5f, 0, _dist+5f+SYMBOLSIZE);
+			game._renderer.line(-SYMBOLSIZE/2f, _dist+SYMBOLSIZE/2f, SYMBOLSIZE/2f, _dist+SYMBOLSIZE/2f);
+		}
+		else if ( _type.compareTo("open") == 0 ) {
+			game._renderer.circle(0, _dist+5f+SYMBOLSIZE/2f, SYMBOLSIZE/2f);
+		}
+		else if ( _type.compareTo("alarm") == 0 ) {
+			game._renderer.line(-SYMBOLSIZE/2f, _dist+5f, SYMBOLSIZE/2f, _dist+5f);
+			game._renderer.line(SYMBOLSIZE/2f, _dist+5f, 0, _dist+5f+SYMBOLSIZE);
+			game._renderer.line(0, _dist+5f+SYMBOLSIZE, -SYMBOLSIZE/2f, _dist+5f);
+		}
 		//
 		game._renderer.end();
 	}
