@@ -135,6 +135,12 @@ public class LockDisk {
 		_lasers = new ArrayList<LaserSrc>();
 		_obstacles = new ArrayList<Obstacle>();
 	}
+	public void reset() {
+		_rotAngle = 0.0f;
+		_oldRotAngle = _rotAngle;
+		_fgTapped = false;
+		_angTapped = _rotAngle;
+	}
 	
 	public void addLaser( float angle ) {
 		_lasers.add( new LaserSrc( _lasers.size(), angle));

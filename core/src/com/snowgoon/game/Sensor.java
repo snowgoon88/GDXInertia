@@ -24,6 +24,7 @@ public class Sensor {
 	float _dist;
 	String _type;
 	boolean _fgActivated;
+	boolean _verb = false;
 	
 	final float ANGLEBOUND = MathUtils.PI / 72f; // 2.5 degree
 	final float ANGCOS = MathUtils.cos(ANGLEBOUND);
@@ -88,16 +89,18 @@ public class Sensor {
 	public void updateWithBeam( float beamAngle ) {
 		// TODO normalize for pb around PI
 		float normedAngle = normalizeAngleRad(beamAngle);
-		System.out.println("  beam="+MathUtils.degRad*normedAngle 
-				+ " in (" + (MathUtils.degRad * (_angle-ANGLEBOUND)) 
-				+ ", " + (MathUtils.degRad * (_angle+ANGLEBOUND)) + ")");
+		if (_verb ) {
+			System.out.println("  beam="+MathUtils.degRad*normedAngle 
+					+ " in (" + (MathUtils.degRad * (_angle-ANGLEBOUND)) 
+					+ ", " + (MathUtils.degRad * (_angle+ANGLEBOUND)) + ")");
+		}
 		if ( ((_angle-ANGLEBOUND <= normedAngle) && (normedAngle <= _angle+ANGLEBOUND)) 
 				|| ((_angle-ANGLEBOUND <= normedAngle+2f*MathUtils.PI) 
 						&& (normedAngle+2f*MathUtils.PI <= _angle+ANGLEBOUND))
 				|| ((_angle-ANGLEBOUND <= normedAngle-2f*MathUtils.PI)
 						&& (normedAngle-2f*MathUtils.PI <= _angle+ANGLEBOUND)) ){
 			_fgActivated = true;
-			System.out.println("  TRUE");
+			if (_verb) System.out.println("  TRUE");
 		}
 	}
 	/** Returns angle in ]-PI, PI[ */
