@@ -10,8 +10,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.MathUtils;
@@ -31,7 +33,7 @@ public class LockScreen implements Screen {
 	GDXInertia _game;
 	
 	Vector3 _center;
-	public boolean _verb = false;
+	public boolean _verb = true;
 	
 	private OrthographicCamera _camera;
 
@@ -39,6 +41,11 @@ public class LockScreen implements Screen {
 	ArrayList<LockDisk> _disks;
 	/** Array of Sensors */
 	ArrayList<Sensor> _sensors;
+
+	// Buttons Textures
+	Texture _resetIcon;
+	Rectangle _resetRect; // position and size of Icon
+	boolean _resetClicked = false;
 	
 	// Position screen touched
 	Vector3 _touchPos = new Vector3();
@@ -52,6 +59,10 @@ public class LockScreen implements Screen {
 	
 	public LockScreen( final GDXInertia game) {
 		_game = game;
+		
+		// Buttons
+		_resetIcon = new Texture(Gdx.files.internal("reset-icon.png"));
+		_resetRect = new Rectangle(800f - 70f, 480f - 70f, 64f, 64f);
 		
 		// Init disk info : IN REVERSE ORDER
 		_center = new Vector3( 400, 240, 0);
@@ -115,6 +126,8 @@ public class LockScreen implements Screen {
 		// Not needed in every frame but good practice
 		_camera.update();
 		
+		
+		debugTouch();
 		// Detect if Disk is tapped
 		if(Gdx.input.isTouched()) {
 			_touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -122,6 +135,10 @@ public class LockScreen implements Screen {
 			
 			if (_verb) {
 				System.out.println( "touchPos = " + _touchPos.toString());
+			}
+			// Check Buttons
+			if ( _resetRect.contains( _touchPos.x, _touchPos.y) ) {
+				_resetClicked = true;
 			}
 //			// Update Disk Independantly
 //			for (LockDisk disk : _disks) {
@@ -136,15 +153,16 @@ public class LockScreen implements Screen {
 				}
 			}
 			
+			
 			// DEBUG
-			_game._renderer.setTransformMatrix( _diskTransform.idt() );
-			_game._renderer.begin();
-			_game._renderer.setColor(1f, 0, 0, 1f); // Red
-			_game._renderer.circle(_touchPos.x, _touchPos.y, 25, 16);
-//			if (_fgTapped ) {
-//				_game._renderer.line(_center, _touchPos );
-//			}
-			_game._renderer.end();
+//			_game._renderer.setTransformMatrix( _diskTransform.idt() );
+//			_game._renderer.begin();
+//			_game._renderer.setColor(1f, 0, 0, 1f); // Red
+//			_game._renderer.circle(_touchPos.x, _touchPos.y, 25, 16);
+////			if (_fgTapped ) {
+////				_game._renderer.line(_center, _touchPos );
+////			}
+//			_game._renderer.end();
 		}
 		else {
 			// Update Disk
@@ -162,11 +180,11 @@ public class LockScreen implements Screen {
 		// Update and Draw Sensors
 		for (Sensor sensor : _sensors) {
 			sensor._fgActivated = false;
-			System.out.println( "Sensor ["+sensor._id+"]");
+			//System.out.println( "Sensor ["+sensor._id+"]");
 			for (LockDisk disk : _disks) {
 				for (LockDisk.LaserSrc laser : disk._lasers) {
 					if (laser._distBeam > 180f ) {
-						System.out.println("  laser_"+disk._id+"/"+laser._id +" at angle " + (MathUtils.radDeg * (laser._angLaser + disk._rotAngle)));
+						//System.out.println("  laser_"+disk._id+"/"+laser._id +" at angle " + (MathUtils.radDeg * (laser._angLaser + disk._rotAngle)));
 						sensor.updateWithBeam(laser._angLaser + disk._rotAngle);
 					}
 				}
@@ -174,6 +192,67 @@ public class LockScreen implements Screen {
 			}
 			sensor.render( _game );
 		}
+		
+		// Draw Reset Button
+		_game._renderer.setTransformMatrix(_diskTransform.idt());
+		_game._spriteBatch.setTransformMatrix(_diskTransform.idt());
+		_game._spriteBatch.begin();
+		_game._spriteBatch.draw(_resetIcon, _resetRect.x, _resetRect.y, _resetRect.width, _resetRect.height);
+		_game._spriteBatch.end();
+		
+		// TODO Pas beau car melange au reste !!!!
+		if (_resetClicked) {
+			_game._renderer.begin();
+			_game._renderer.setColor(1f, 0, 0, 1f); // Red
+			_game._renderer.rect(_resetRect.x, _resetRect.y, _resetRect.width, _resetRect.height);
+			_game._renderer.end();
+			for (LockDisk disk : _disks) {
+				disk.reset();
+			}
+			// TODO pourrait revenir en position neutre a une certaine vitesse
+			_resetClicked = false;
+		}
+	}
+	/**
+	 * draw disk + number for every touch position.
+	 */
+	void debugTouch() {
+
+		float[] x = new float[20];
+		float[] y = new float[20];
+		String[] msg = new String[20];
+
+		// Set up renderer
+		_game._renderer.setTransformMatrix( _diskTransform.idt() );
+		_game._renderer.begin();
+		_game._renderer.setColor(1f, 0, 0, 1f); // Red
+		
+		// should follow 20 touch max
+		for (int i = 0; i < 20; i++) { // 20 is max number of touch points
+			if (Gdx.input.isTouched(i)) {
+				_touchPos.set(Gdx.input.getX(i), Gdx.input.getY(i), 0);
+				_camera.unproject( _touchPos );
+				_game._renderer.circle(_touchPos.x, _touchPos.y, 25, 16);
+				x[i] = _touchPos.x;
+				y[i] = _touchPos.y;
+				msg[i] = Integer.toString(i);
+				// System.out.println( "msg["+i+"]="+msg[i]);
+			}
+			else {
+				msg[i] = "";
+			}
+		}
+		_game._renderer.end();
+		
+		// And then number
+		_game._spriteBatch.setTransformMatrix( _diskTransform.idt() );
+		_game._spriteBatch.begin();
+		for (int i = 0; i < msg.length; i++) {
+			if (msg[i].compareTo("") != 0) {
+				_game._font.draw(_game._spriteBatch, msg[i], x[i], y[i]+30);
+			}
+		}
+		_game._spriteBatch.end();
 	}
 
 	/* (non-Javadoc)
@@ -217,7 +296,8 @@ public class LockScreen implements Screen {
 	 */
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
+		// Free Textures
+		_resetIcon.dispose();
 
 	}
 	
