@@ -17,6 +17,8 @@ public class GDXInertia extends Game {
 	SpriteBatch _spriteBatch;
 	public BitmapFont _font;
 	
+	LockScreen _lockScreen;
+	
 	// Position where screen touched or clicked
 	Vector3 _touchPos;
 	
@@ -35,7 +37,12 @@ public class GDXInertia extends Game {
 		//Use LibGDX's default Arial font.
         _font = new BitmapFont();
         //this.setScreen(new MainMenuScreen(this));
-        this.setScreen(new LockScreen( this ));
+        _lockScreen = new LockScreen(this);
+        //this.setScreen( _lockScreen);
+        
+        // TEST
+        Solver solve = new Solver();
+        solve.getSolutions( _lockScreen );
 	}
 
 	@Override
