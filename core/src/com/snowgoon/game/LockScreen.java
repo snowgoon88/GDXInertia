@@ -46,6 +46,15 @@ public class LockScreen implements Screen {
 	Texture _resetIcon;
 	Rectangle _resetRect; // position and size of Icon
 	boolean _resetClicked = false;
+	Texture _nextIcon;
+	Rectangle _nextRect;
+	boolean _nextClicked = false;
+	// Last Click Time
+	long _lastClickTime = 0;
+	long REFRACTORY_TIME = 100000000; // 0.1 in seconds
+	
+	// Which solution is displayed
+	int _indSolDisplayed = -1;
 	
 	// Position screen touched
 	Vector3 _touchPos = new Vector3();
@@ -54,7 +63,7 @@ public class LockScreen implements Screen {
 	
 	
 	/** Decimal formating */
-	static DecimalFormat df4_1 = new DecimalFormat( "0.0" );
+	static DecimalFormat df1_1 = new DecimalFormat( "0.0" );
 	
 	
 	public LockScreen( final GDXInertia game) {
@@ -63,6 +72,8 @@ public class LockScreen implements Screen {
 		// Buttons
 		_resetIcon = new Texture(Gdx.files.internal("reset-icon.png"));
 		_resetRect = new Rectangle(800f - 70f, 480f - 70f, 64f, 64f);
+		_nextIcon = new Texture(Gdx.files.internal("next-icon.png"));
+		_nextRect = new Rectangle(800f - 70f, 480f - 2*70f, 64f, 64f);
 		
 		// Init disk info : IN REVERSE ORDER
 		_center = new Vector3( 400, 240, 0);
@@ -139,9 +150,16 @@ public class LockScreen implements Screen {
 			if (_verb) {
 				System.out.println( "touchPos = " + _touchPos.toString());
 			}
-			// Check Buttons
-			if ( _resetRect.contains( _touchPos.x, _touchPos.y) ) {
-				_resetClicked = true;
+			// Check Buttons only after some refractory time
+			if (System.nanoTime() - _lastClickTime > REFRACTORY_TIME) {
+				if ( _resetRect.contains( _touchPos.x, _touchPos.y) ) {
+					_resetClicked = true;
+					_lastClickTime = System.nanoTime();
+				}
+				else if ( _nextRect.contains( _touchPos.x, _touchPos.y )) {
+					_nextClicked = true;
+					_lastClickTime = System.nanoTime();
+				}
 			}
 //			// Update Disk Independantly
 //			for (LockDisk disk : _disks) {
@@ -196,11 +214,26 @@ public class LockScreen implements Screen {
 			sensor.render( _game );
 		}
 		
-		// Draw Reset Button
+		// Draw Buttons and information message
+		String info = "Sol n° " + _indSolDisplayed + " / " + _game._solutions.size();
+		if (_indSolDisplayed >= 0) {
+			info += "\n=> (";
+			info += df1_1.format( _game._solutions.get(_indSolDisplayed)[0]*MathUtils.radDeg) + ", ";
+			info += df1_1.format( _game._solutions.get(_indSolDisplayed)[1]*MathUtils.radDeg) + ", ";
+			info += df1_1.format( _game._solutions.get(_indSolDisplayed)[2]*MathUtils.radDeg) + ", ";
+			info += ")";
+		}
+		//TextBounds tb = _game._font.getBounds(info);
 		_game._renderer.setTransformMatrix(_diskTransform.idt());
 		_game._spriteBatch.setTransformMatrix(_diskTransform.idt());
 		_game._spriteBatch.begin();
+		// Buttons
 		_game._spriteBatch.draw(_resetIcon, _resetRect.x, _resetRect.y, _resetRect.width, _resetRect.height);
+		_game._spriteBatch.draw(_nextIcon, _nextRect.x, _nextRect.y, _nextRect.width, _nextRect.height);
+		
+		// Information message
+		// With information
+		_game._font.drawMultiLine(_game._spriteBatch, info, 550f, 470f );	
 		_game._spriteBatch.end();
 		
 		// TODO Pas beau car melange au reste !!!!
@@ -212,8 +245,30 @@ public class LockScreen implements Screen {
 			for (LockDisk disk : _disks) {
 				disk.reset();
 			}
+			_indSolDisplayed = -1;
+			
 			// TODO pourrait revenir en position neutre a une certaine vitesse
 			_resetClicked = false;
+		}
+		//
+		if (_nextClicked) {
+			_game._renderer.begin();
+			_game._renderer.setColor(1f, 0, 0, 1f); // Red
+			_game._renderer.rect(_nextRect.x, _nextRect.y, _nextRect.width, _nextRect.height);
+			
+			_indSolDisplayed += 1;
+			if (_indSolDisplayed == _game._solutions.size()) {
+				_indSolDisplayed = 0;
+			}
+			// set up the solution
+			float [] oneSolution = _game._solutions.get(_indSolDisplayed);
+			for (int i = 0; i < oneSolution.length; i++) {
+				_disks.get(i).reset();
+				_disks.get(i)._rotAngle = oneSolution[i];
+			}
+			
+			_game._renderer.end();
+			_nextClicked = false;
 		}
 	}
 	/**

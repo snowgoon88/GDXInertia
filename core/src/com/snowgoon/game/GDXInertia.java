@@ -1,5 +1,7 @@
 package com.snowgoon.game;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -17,7 +19,10 @@ public class GDXInertia extends Game {
 	SpriteBatch _spriteBatch;
 	public BitmapFont _font;
 	
+	// A Screen for the game
 	LockScreen _lockScreen;
+	// A set of solutions
+	ArrayList<float[]> _solutions;
 	
 	// Position where screen touched or clicked
 	Vector3 _touchPos;
@@ -38,11 +43,13 @@ public class GDXInertia extends Game {
         _font = new BitmapFont();
         //this.setScreen(new MainMenuScreen(this));
         _lockScreen = new LockScreen(this);
-        //this.setScreen( _lockScreen);
         
         // TEST
         Solver solve = new Solver();
-        solve.getSolutions( _lockScreen );
+        _solutions = solve.getSolutions( _lockScreen );
+        
+        // gogogo
+        this.setScreen( _lockScreen);
 	}
 
 	@Override
