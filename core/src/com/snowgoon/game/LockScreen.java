@@ -49,6 +49,7 @@ public class LockScreen implements Screen {
 	Texture _nextIcon;
 	Rectangle _nextRect;
 	boolean _nextClicked = false;
+	NBRadioButton _nbSelectedBtn;
 	// Last Click Time
 	long _lastClickTime = 0;
 	long REFRACTORY_TIME = 100000000; // 0.1 in seconds
@@ -61,6 +62,16 @@ public class LockScreen implements Screen {
 	// Transformation Matrix
 	Matrix4 _diskTransform = new Matrix4();
 	
+	// For multitouch disk
+	final int NB_FINGER_MAX = 5;
+	int _nb_finger = 2;
+	LockDisk _diskSelected;
+	float _angWhenTapped = 0.0f;
+	float[] _angTappedOri = null;
+	boolean[] _onDisk = new boolean[NB_FINGER_MAX];
+	float[] _angTappedCur = new float[NB_FINGER_MAX];
+	float[] _varAngRotOri = new float[NB_FINGER_MAX];
+	final float EPS_VAR_ANGLE_MULTI = MathUtils.PI / 36f; // 5 degre
 	
 	/** Decimal formating */
 	static DecimalFormat df1_1 = new DecimalFormat( "0.0" );
@@ -74,6 +85,7 @@ public class LockScreen implements Screen {
 		_resetRect = new Rectangle(800f - 70f, 480f - 70f, 64f, 64f);
 		_nextIcon = new Texture(Gdx.files.internal("next-icon.png"));
 		_nextRect = new Rectangle(800f - 70f, 480f - 2*70f, 64f, 64f);
+		_nbSelectedBtn = new NBRadioButton(800f - 70f, 480f - 3*70f);
 		
 		// Init disk info : IN REVERSE ORDER
 		_center = new Vector3( 400, 240, 0);
@@ -144,6 +156,9 @@ public class LockScreen implements Screen {
 		debugTouch();
 		// Detect if Disk is tapped
 		if(Gdx.input.isTouched()) {
+			// disk multitouch ??
+			multiTouch();
+			
 			_touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 			_camera.unproject( _touchPos );
 			
@@ -160,19 +175,29 @@ public class LockScreen implements Screen {
 					_nextClicked = true;
 					_lastClickTime = System.nanoTime();
 				}
+				else if (_nbSelectedBtn.updateFromClick(_touchPos) == true ) {
+					_nb_finger = _nbSelectedBtn._nbSelected;
+					_lastClickTime = System.nanoTime();
+					// Update Disk
+					for (LockDisk disk : _disks) {
+						disk.updateNotTouched();
+					}
+					_diskSelected = null;
+					_angTappedOri = null;
+				}
 			}
 //			// Update Disk Independantly
 //			for (LockDisk disk : _disks) {
 //				disk.updateTouched( _touchPos );
 //			}
 			// Update All interior disks
-			boolean forceUpdate = false;
-			for (LockDisk disk : _disks) {
-				if (forceUpdate || disk.isTouched( _touchPos)) {
-					forceUpdate = true;
-					disk.updateTouched( _touchPos );	
-				}
-			}
+//			boolean forceUpdate = false;
+//			for (LockDisk disk : _disks) {
+//				if (forceUpdate || disk.isTouched( _touchPos)) {
+//					forceUpdate = true;
+//					disk.updateTouched( _touchPos );	
+//				}
+//			}
 			
 			
 			// DEBUG
@@ -190,6 +215,8 @@ public class LockScreen implements Screen {
 			for (LockDisk disk : _disks) {
 				disk.updateNotTouched();
 			}
+			_diskSelected = null;
+			_angTappedOri = null;
 		}
 
 		// Draw Circles
@@ -236,6 +263,8 @@ public class LockScreen implements Screen {
 		_game._font.drawMultiLine(_game._spriteBatch, info, 550f, 470f );	
 		_game._spriteBatch.end();
 		
+		_nbSelectedBtn.render(_game._spriteBatch);
+		
 		// TODO Pas beau car melange au reste !!!!
 		if (_resetClicked) {
 			_game._renderer.begin();
@@ -272,6 +301,153 @@ public class LockScreen implements Screen {
 		}
 	}
 	/**
+	 * Need NB_DISK_MULTI fingers, at constant angle, to rotate a disk.
+	 */
+	void multiTouch() {
+		// Which disk is touched
+		LockDisk diskTouched = _diskSelected;
+		float rotAngleOri = 0.0f;
+		// Verbose message
+		String verbStr = "";
+		// Check that first touch is for a disk
+		if (Gdx.input.isTouched(0)) {
+			_touchPos.set(Gdx.input.getX(0), Gdx.input.getY(0), 0);
+			_camera.unproject( _touchPos );
+			// find disk if none
+			if (diskTouched == null) {
+				for (LockDisk disk : _disks) {
+					if (disk.isTouched( _touchPos)) {
+						diskTouched = disk;
+						_onDisk[0] = true;
+						Vector3 ptFromCenter = _touchPos.cpy().sub( _center );
+						_angTappedCur[0] = MathUtils.atan2( ptFromCenter.y, ptFromCenter.x);
+						verbStr += "0 Touched " + diskTouched._id
+								+ " a=" + MathUtils.radDeg*_angTappedCur[0];
+						break;
+					}
+				}
+			}
+			else {
+				_onDisk[0] = diskTouched.isTouched(_touchPos);
+				Vector3 ptFromCenter = _touchPos.cpy().sub( _center );
+				_angTappedCur[0] = MathUtils.atan2( ptFromCenter.y, ptFromCenter.x);
+				if (_onDisk[0] == false ) {
+					verbStr += "\n" + 0 + " NOT in " + diskTouched._id;
+					diskTouched = null;
+				}
+				else {
+					verbStr += "0 Touched " + diskTouched._id
+							+ " a=" + MathUtils.radDeg*_angTappedCur[0];
+				}
+			}
+		}
+		// Continue if first touch is on a disk
+		if (diskTouched != null) {
+			// other touch on the same disk
+			for (int i = 1; i < _nb_finger; i++) {
+				if (Gdx.input.isTouched(i)) {
+					_touchPos.set(Gdx.input.getX(i), Gdx.input.getY(i), 0);
+					_camera.unproject( _touchPos );
+					_onDisk[i] = diskTouched.isTouched(_touchPos);
+					// stop is not on the same disk
+					if (_onDisk[i] == false ) {
+						verbStr += "\n" + i + " NOT in " + diskTouched._id;
+						diskTouched = null;
+						break;
+					}
+					else {
+						Vector3 ptFromCenter = _touchPos.cpy().sub( _center );
+						_angTappedCur[i] = MathUtils.atan2( ptFromCenter.y, ptFromCenter.x);
+						verbStr += "\n"+i+" Touched " + diskTouched._id
+								+ " a=" + MathUtils.radDeg*_angTappedCur[i];
+					}
+				}
+				else {
+					verbStr += "\n" + i + " NOT TOUCHING";
+					diskTouched = null;
+					break;
+				}
+			}
+		}
+		// Update _angTappedOri : null if not touched, created from _angTappedCur if touched
+		if (_angTappedOri == null && diskTouched != null) {
+			_diskSelected = diskTouched;
+			_angTappedOri = new float[_nb_finger];
+			for (int i = 0; i < _angTappedOri.length; i++) {
+				_angTappedOri[i] = _angTappedCur[i];
+			}
+			_angWhenTapped = _diskSelected._rotAngle;
+		}
+		// Compute rotation angle from origin
+		else if (_angTappedOri != null && diskTouched != null) {
+			rotAngleOri = _angTappedCur[0] - _angTappedOri[0];
+			verbStr += "\n + rot="+df1_1.format(rotAngleOri) + " ";
+			for (int i = 0; i < _angTappedOri.length; i++) {
+				_varAngRotOri[i] = normalizeAngleRad(_angTappedCur[i] - (_angTappedOri[i] + rotAngleOri));
+ 				if (Math.abs(_varAngRotOri[i]) > EPS_VAR_ANGLE_MULTI ) {
+					// Variation too large
+					verbStr += "XX ";
+					diskTouched = null;
+				}
+ 				verbStr += "(" + df1_1.format(_angTappedCur[i]*MathUtils.radDeg) 
+ 						+ " - " + df1_1.format( _angTappedOri[i] * MathUtils.radDeg) 
+ 						+ "):" + df1_1.format(_varAngRotOri[i]*MathUtils.radDeg) +  "; ";		
+			}
+		}
+		
+		// Verbose
+		// Lines _center -> touched position if diskTouched not null
+		if (_angTappedOri != null && _diskSelected != null) {
+			_game._renderer.setTransformMatrix(_diskTransform.idt());
+			float radius = _diskSelected._radSup;
+			_game._renderer.begin();
+			for (int i = 0; i < _angTappedOri.length; i++) {
+				if (_onDisk[i] == false ) {
+					_game._renderer.setColor(0.0f, 0.0f, 1.0f, 1.0f); // blue
+				}
+				else if (_varAngRotOri[i] > EPS_VAR_ANGLE_MULTI) {
+					_game._renderer.setColor(1.0f, 1.0f, 0.0f, 1.0f); // yellow
+				}
+				else {
+					_game._renderer.setColor(1.0f, 0.0f, 0.0f, 1.0f); // red
+				}
+				_game._renderer.line(_center.x, _center.y,
+						_center.x+radius*MathUtils.cos(_angTappedOri[i] + rotAngleOri),
+						_center.y+radius*MathUtils.sin(_angTappedOri[i] + rotAngleOri));
+			}
+			_game._renderer.end();
+		}
+		if (diskTouched == null) {
+			verbStr += "\nDisk Touched : None";
+		}
+		else {
+			verbStr += "\nDisk Touched : " + diskTouched._id;
+		}
+		if (_diskSelected == null) {
+			verbStr += "\nDisk Selected : None";
+		}
+		else {
+			verbStr += "\nDisk Selected : " + _diskSelected._id;
+		}
+		_game._spriteBatch.setTransformMatrix( _diskTransform.idt() );
+		_game._spriteBatch.begin();
+		_game._font.drawMultiLine(_game._spriteBatch, verbStr, 50f, 470f);
+		_game._spriteBatch.end();
+		
+		// Update disks if diskTouched != null with _touchPos[0]
+		if (diskTouched != null) {
+			boolean forceUpdate = false;
+			for (int i = 0; i < _disks.size(); i++) {
+				LockDisk disk = _disks.get(i);
+				forceUpdate = forceUpdate || (disk == diskTouched);
+				if (forceUpdate) {
+					disk._fgTapped = true;
+					disk._rotAngle = normalizeAngleRad(_angWhenTapped + rotAngleOri );
+				}	
+			}
+		}
+	}
+	/**                                                                                                                                                   
 	 * draw disk + number for every touch position.
 	 */
 	void debugTouch() {
@@ -359,6 +535,22 @@ public class LockScreen implements Screen {
 
 	}
 	
+	/** Returns angle in ]-180.0, 180.0[ */
+	float normalizeAngleDeg(float angle)
+	{
+	    float newAngle = angle;
+	    while (newAngle <= -180f) newAngle += 360f;
+	    while (newAngle > 180f) newAngle -= 360f;
+	    return newAngle;
+	}
+	/** Returns angle in ]-PI, PI[ */
+	float normalizeAngleRad(float angle)
+	{
+	    float newAngle = angle;
+	    while (newAngle <= - MathUtils.PI) newAngle += 2.0f * MathUtils.PI;
+	    while (newAngle > MathUtils.PI) newAngle -= 2.0f * MathUtils.PI;
+	    return newAngle;
+	}
 	
 
 }
